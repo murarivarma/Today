@@ -10,6 +10,11 @@ import UIKit
 
 class TasksTableViewController: UITableViewController {
     
+    
+    var workTasks = [Task]()
+    var personalTasks = [Task]()
+    //var taskData: [String: [Task]]?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -20,30 +25,81 @@ class TasksTableViewController: UITableViewController {
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    override func viewWillAppear(_ animated: Bool) {
+        //get data from database
+        getData()
+        
+        //reload the table view
+        tableView.reloadData()
+    }
+    
+    //Mark: - Get Tasks from CoreData
+    
+    func getData() {
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+        workTasks = []
+        personalTasks = [] // To empty the array again
+        
+        do {
+            let tasks:[Task] = try context.fetch(Task.fetchRequest())
+            
+            for t in tasks {
+                if t.section == "Work" {
+                    workTasks.append(t)
+                }
+                else if t.section == "Personal" {
+                    personalTasks.append(t)
+                }
+            }
+        } catch {
+            print("Retrieving data failed")
+        }
     }
     
     // MARK: - Table view data source
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 1
-    }
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
         return 2
     }
     
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        
+        //            return Array(taskData!)[section].key
+        
+        if section == 0 {
+            return "Work"
+        }
+        else if section == 1 {
+            return "Personal"
+        } else {
+            return ""
+        }
+        
+    }
+    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        //            return Array(taskData!)[section].value.count
+        
+        if section == 0 {
+            return workTasks.count
+        }
+        else if section == 1 {
+            return personalTasks.count
+        } else {
+            return 0
+        }
+    }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! TasksTableViewCell
-        cell.cellTextLabel.text = "Hello"
-        cell.taskCompleted = false
-        // Configure the cell...
         
+        if indexPath.section == 0 {
+            cell.cellTextLabel.text = workTasks[indexPath.row].taskText
+        }
+        else if indexPath.section == 1 {
+            cell.cellTextLabel.text = personalTasks[indexPath.row].taskText
+        }
         
         return cell
     }
@@ -93,5 +149,10 @@ class TasksTableViewController: UITableViewController {
      // Pass the selected object to the new view controller.
      }
      */
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
     
 }
