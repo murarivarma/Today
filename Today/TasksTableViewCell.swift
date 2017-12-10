@@ -21,7 +21,6 @@ class TasksTableViewCell: UITableViewCell {
     var delegate :TasksTableViewCellDelegate?
     
     @IBAction func taskCompletedButtonTouched(_ sender: UIButton) {
-        print("BEFORE: \(taskCompleted)")
         if !taskCompleted  {
             taskCompletedButton.backgroundColor = UIColor.green
             taskCompleted = true
@@ -29,7 +28,6 @@ class TasksTableViewCell: UITableViewCell {
             taskCompletedButton.backgroundColor = UIColor.red
             taskCompleted = false
         }
-        print("AFTER: \(taskCompleted)")
         delegate?.cellButtonTapped(cell: self, taskCompleted: taskCompleted)
     }
     override func awakeFromNib() {

@@ -43,7 +43,7 @@ class TasksTableViewController: UITableViewController, TasksTableViewCellDelegat
         do {
             let tasks:[Task] = try context.fetch(Task.fetchRequest())
             
-            print("tasks data: \(tasks)")
+            
             
             for t in tasks {
                 if t.section == "Work" {
@@ -52,7 +52,6 @@ class TasksTableViewController: UITableViewController, TasksTableViewCellDelegat
                 else if t.section == "Personal" {
                     personalTasks.append(t)
                 }
-                print( t.isFinished)
             }
         } catch {
             print("Retrieving data failed")
@@ -101,9 +100,19 @@ class TasksTableViewController: UITableViewController, TasksTableViewCellDelegat
         
         if indexPath.section == 0 {
             cell.cellTextLabel.text = workTasks[indexPath.row].taskText
+            if workTasks[indexPath.row].isFinished  {
+                cell.taskCompletedButton.backgroundColor = UIColor.green
+            } else {
+                cell.taskCompletedButton.backgroundColor = UIColor.red
+            }
         }
         else if indexPath.section == 1 {
             cell.cellTextLabel.text = personalTasks[indexPath.row].taskText
+            if personalTasks[indexPath.row].isFinished  {
+                cell.taskCompletedButton.backgroundColor = UIColor.green
+            } else {
+                cell.taskCompletedButton.backgroundColor = UIColor.red
+            }
         }
         
         return cell
@@ -172,39 +181,45 @@ class TasksTableViewController: UITableViewController, TasksTableViewCellDelegat
     
     func cellButtonTapped(cell: UITableViewCell, taskCompleted: Bool) {
         // update if task completed in coredata
-        print("selected cell- section:    \(String(describing: tableView.indexPath(for: cell)?.section))")
-        print("selected cell- section:    \(String(describing: tableView.indexPath(for: cell)?.row))")
-        switch cell.tag {
-        case 0:
-            updateData(thecell: cell)
-        case 1:
-            break
-        default:
-            break
-        }
+        
+        updateData(thecell: cell, isTaskComplete: taskCompleted)
     }
-    func updateData(thecell: UITableViewCell) {
+    
+    func updateData(thecell: UITableViewCell, isTaskComplete: Bool) {
         
-//        let tableCellSection = tableView.indexPath(for: thecell)?.section
-//        let tableCellIndexPathRow = tableView.indexPath(for: thecell)?.row
-//
-        
-        
-        
-        /*
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {return}
         let managedObjectContext = appDelegate.persistentContainer.viewContext
-        let contact = contacts[indexPath.row]
-        contact.setValue(name, forKey: "name")
-        contact.setValue(phoneNumber, forKey: "phoneNumber")
         
-        do {
-            try managedObjectContext.save()
-            self.contacts.remove(at: indexPath.row)
-            self.contacts.insert(contact, at: indexPath.row)
-        } catch let error as NSError {
-            print("Could not save. \(error), \(error.userInfo)")
-        } */
+        let tableCellSection = tableView.indexPath(for: thecell)?.section
+        let tableCellIndexPathRow = tableView.indexPath(for: thecell)?.row
+        
+        if tableCellSection! == 0 {
+            let task = workTasks[tableCellIndexPathRow!]
+            task.setValue(isTaskComplete, forKey: "isFinished")
+            do {
+                var tasks:[Task] = try managedObjectContext.fetch(Task.fetchRequest())
+                let i = tasks.index(of: task)
+                try managedObjectContext.save()
+                tasks.remove(at: i!)
+                tasks.insert(task, at: i!)
+                print(tasks[i!])
+                
+                self.workTasks.remove(at: tableCellIndexPathRow!)
+                self.workTasks.insert(task, at: tableCellIndexPathRow!)
+            } catch let error as NSError {
+                print("Could not save. \(error), \(error.userInfo)")
+            }
+        } else if tableCellSection! == 1 {
+            let task = personalTasks[tableCellIndexPathRow!]
+            task.setValue(isTaskComplete, forKey: "isFinished")
+            do {
+                try managedObjectContext.save()
+                self.personalTasks.remove(at: tableCellIndexPathRow!)
+                self.personalTasks.insert(task, at: tableCellIndexPathRow!)
+            } catch let error as NSError {
+                print("Could not save. \(error), \(error.userInfo)")
+            }
+        }
     }
     
     override func didReceiveMemoryWarning() {
